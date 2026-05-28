@@ -1,0 +1,236 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.card-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.card-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a2e;
+  letter-spacing: -0.5px;
+}
+
+.card-header p {
+  margin-top: 6px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+input[type="number"] {
+  width: 100%;
+  padding: 12px 48px 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 16px;
+  color: #111827;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+input[type="number"]:focus {
+  border-color: #0f3460;
+  box-shadow: 0 0 0 3px rgba(15, 52, 96, 0.12);
+}
+
+.input-unit {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  font-weight: 600;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #0f3460, #16213e);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: opacity 0.2s, transform 0.1s;
+  letter-spacing: 0.02em;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+.result {
+  display: none;
+  margin-top: 28px;
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.result.visible {
+  display: block;
+  animation: fadeIn 0.35s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.result-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.75;
+  margin-bottom: 6px;
+}
+
+.result-value {
+  font-size: 52px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.result-category {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.result-tip {
+  font-size: 13px;
+  margin-top: 8px;
+  opacity: 0.8;
+  line-height: 1.5;
+}
+
+/* Category color themes */
+.cat-abaixo   { background: #e0f2fe; color: #0369a1; }
+.cat-normal   { background: #dcfce7; color: #15803d; }
+.cat-sobrepeso { background: #fef9c3; color: #a16207; }
+.cat-obesidade1 { background: #ffedd5; color: #c2410c; }
+.cat-obesidade2 { background: #fee2e2; color: #b91c1c; }
+.cat-obesidade3 { background: #fce7f3; color: #9d174d; }
+
+.error-msg {
+  display: none;
+  background: #fee2e2;
+  color: #b91c1c;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 16px;
+  text-align: center;
+}
+
+.error-msg.visible {
+  display: block;
+  animation: fadeIn 0.2s ease;
+}
+
+.table-section {
+  margin-top: 32px;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 24px;
+}
+
+.table-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+  margin-bottom: 12px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th {
+  text-align: left;
+  font-weight: 600;
+  color: #6b7280;
+  padding: 6px 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+td {
+  padding: 7px 8px;
+  color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}

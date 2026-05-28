@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calculadora de IMC</title>
+    <style>
+      *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      .card {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 40px 36px;
+        width: 100%;
+        max-width: 420px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+      }
+
+      .card-header {
+        text-align: center;
+        margin-bottom: 32px;
+      }
+
+      .card-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1a1a2e;
+        letter-spacing: -0.5px;
+      }
+
+      .card-header p {
+        margin-top: 6px;
+        font-size: 14px;
+        color: #6b7280;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .input-wrapper {
+        position: relative;
+      }
+
+      input[type="number"] {
+        width: 100%;
+        padding: 12px 48px 12px 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        font-size: 16px;
+        color: #111827;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        appearance: textfield;
+        -moz-appearance: textfield;
+      }
+
+      input[type="number"]::-webkit-inner-spin-button,
+      input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+      }
+
+      input[type="number"]:focus {
+        border-color: #0f3460;
+        box-shadow: 0 0 0 3px rgba(15, 52, 96, 0.12);
+      }
+
+      .input-unit {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 13px;
+        font-weight: 600;
+        color: #9ca3af;
+        pointer-events: none;
+      }
+
+      button {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #0f3460, #16213e);
+        color: #ffffff;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 8px;
+        transition: opacity 0.2s, transform 0.1s;
+        letter-spacing: 0.02em;
+      }
+
+      button:hover {
+        opacity: 0.9;
+      }
+
+      button:active {
+        transform: scale(0.98);
+      }
+
+      .result {
+        display: none;
+        margin-top: 28px;
+        border-radius: 14px;
+        padding: 24px;
+        text-align: center;
+        transition: all 0.3s ease;
+      }
+
+      .result.visible {
+        display: block;
+        animation: fadeIn 0.35s ease;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      .result-label {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        opacity: 0.75;
+        margin-bottom: 6px;
+      }
+
+      .result-value {
+        font-size: 52px;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 8px;
+      }
+
+      .result-category {
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .result-tip {
+        font-size: 13px;
+        margin-top: 8px;
+        opacity: 0.8;
+        line-height: 1.5;
+      }
+
+      /* Category color themes */
+      .cat-abaixo   { background: #e0f2fe; color: #0369a1; }
+      .cat-normal   { background: #dcfce7; color: #15803d; }
+      .cat-sobrepeso { background: #fef9c3; color: #a16207; }
+      .cat-obesidade1 { background: #ffedd5; color: #c2410c; }
+      .cat-obesidade2 { background: #fee2e2; color: #b91c1c; }
+      .cat-obesidade3 { background: #fce7f3; color: #9d174d; }
+
+      .error-msg {
+        display: none;
+        background: #fee2e2;
+        color: #b91c1c;
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-size: 14px;
+        font-weight: 500;
+        margin-top: 16px;
+        text-align: center;
+      }
+
+      .error-msg.visible {
+        display: block;
+        animation: fadeIn 0.2s ease;
+      }
+
+      .table-section {
+        margin-top: 32px;
+        border-top: 1px solid #f3f4f6;
+        padding-top: 24px;
+      }
+
+      .table-title {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #9ca3af;
+        margin-bottom: 12px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      th {
+        text-align: left;
+        font-weight: 600;
+        color: #6b7280;
+        padding: 6px 8px;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      td {
+        padding: 7px 8px;
+        color: #374151;
+        border-bottom: 1px solid #f3f4f6;
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+
+      .dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="card-header">
+        <h1>Calculadora de IMC</h1>
+        <p>Índice de Massa Corporal</p>
+      </div>
+
+      <div class="form-group">
+        <label for="peso">Peso</label>
+        <div class="input-wrapper">
+          <input type="number" id="peso" placeholder="Ex: 70" min="1" max="500" step="0.1" />
+          <span class="input-unit">kg</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="altura">Altura</label>
+        <div class="input-wrapper">
+          <input type="number" id="altura" placeholder="Ex: 1.75" min="0.5" max="3" step="0.01" />
+          <span class="input-unit">m</span>
+        </div>
+      </div>
+
+      <button onclick="calcular()">Calcular IMC</button>
+
+      <div class="error-msg" id="erro"></div>
+
+      <div class="result" id="resultado">
+        <div class="result-label">Seu IMC</div>
+        <div class="result-value" id="imc-valor"></div>
+        <div class="result-category" id="imc-categoria"></div>
+        <div class="result-tip" id="imc-tip"></div>
+      </div>
+
+      <div class="table-section">
+        <div class="table-title">Tabela de referência (OMS)</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Classificação</th>
+              <th>IMC</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="dot" style="background:#0369a1"></span>Abaixo do peso</td>
+              <td>&lt; 18,5</td>
+            </tr>
+            <tr>
+              <td><span class="dot" style="background:#15803d"></span>Peso normal</td>
+              <td>18,5 – 24,9</td>
+            </tr>
+            <tr>
+              <td><span class="dot" style="background:#a16207"></span>Sobrepeso</td>
+              <td>25,0 – 29,9</td>
+            </tr>
+            <tr>
+              <td><span class="dot" style="background:#c2410c"></span>Obesidade grau I</td>
+              <td>30,0 – 34,9</td>
+            </tr>
+            <tr>
+              <td><span class="dot" style="background:#b91c1c"></span>Obesidade grau II</td>
+              <td>35,0 – 39,9</td>
+            </tr>
+            <tr>
+              <td><span class="dot" style="background:#9d174d"></span>Obesidade grau III</td>
+              <td>&ge; 40,0</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      function calcular() {
+        var peso    = parseFloat(document.getElementById('peso').value);
+        var altura  = parseFloat(document.getElementById('altura').value);
+        var erroEl  = document.getElementById('erro');
+        var resEl   = document.getElementById('resultado');
+
+        erroEl.classList.remove('visible');
+        resEl.classList.remove('visible');
+        resEl.className = 'result';
+
+        if (isNaN(peso) || isNaN(altura) || peso <= 0 || altura <= 0) {
+          erroEl.textContent = 'Por favor, informe valores válidos para peso e altura.';
+          erroEl.classList.add('visible');
+          return;
+        }
+
+        if (peso > 500) {
+          erroEl.textContent = 'Valor de peso inválido. Insira um peso entre 1 e 500 kg.';
+          erroEl.classList.add('visible');
+          return;
+        }
+
+        if (altura < 0.5 || altura > 3) {
+          erroEl.textContent = 'Valor de altura inválido. Insira a altura em metros (ex: 1.75).';
+          erroEl.classList.add('visible');
+          return;
+        }
+
+        var imc = peso / (altura * altura);
+
+        var categoria, cssClass, tip;
+
+        if (imc < 18.5) {
+          categoria = 'Abaixo do peso';
+          cssClass  = 'cat-abaixo';
+          tip       = 'Considere consultar um nutricionista para avaliar sua alimentação.';
+        } else if (imc < 25) {
+          categoria = 'Peso normal';
+          cssClass  = 'cat-normal';
+          tip       = 'Parabéns! Mantenha uma alimentação equilibrada e pratique atividades físicas.';
+        } else if (imc < 30) {
+          categoria = 'Sobrepeso';
+          cssClass  = 'cat-sobrepeso';
+          tip       = 'Pequenas mudanças na dieta e mais atividade física podem ajudar bastante.';
+        } else if (imc < 35) {
+          categoria = 'Obesidade grau I';
+          cssClass  = 'cat-obesidade1';
+          tip       = 'Recomenda-se acompanhamento médico e nutricional.';
+        } else if (imc < 40) {
+          categoria = 'Obesidade grau II';
+          cssClass  = 'cat-obesidade2';
+          tip       = 'Procure orientação médica especializada o quanto antes.';
+        } else {
+          categoria = 'Obesidade grau III';
+          cssClass  = 'cat-obesidade3';
+          tip       = 'Acompanhamento médico urgente é fortemente recomendado.';
+        }
+
+        document.getElementById('imc-valor').textContent    = imc.toFixed(1).replace('.', ',');
+        document.getElementById('imc-categoria').textContent = categoria;
+        document.getElementById('imc-tip').textContent      = tip;
+
+        resEl.classList.add('visible', cssClass);
+      }
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') calcular();
+      });
+    </script>
+  </body>
+</html>
