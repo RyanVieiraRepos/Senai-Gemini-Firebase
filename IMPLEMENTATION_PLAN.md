@@ -43,6 +43,18 @@ Enhance the IMC calculator to:
 {
   limitId: string (auto-generated)
   userId: string
+  ipAddress: string
+  date: string (YYYY-MM-DD format)
+  count: number (incremented each calculation)
+  expiresAt: timestamp (next day at 00:00)
+}
+```
+
+#### Collection: `ip_rate_limits`
+```
+{
+  ipLimitId: string (auto-generated)
+  ipAddress: string
   date: string (YYYY-MM-DD format)
   count: number (incremented each calculation)
   expiresAt: timestamp (next day at 00:00)
@@ -114,7 +126,14 @@ module.exports = (req, res, next) => {
     userId = uuidv4();
   }
   
+  // Extract IP address
+  const ipAddress = req.headers['x-forwarded-for']?.split(',')[0].trim() ||
+                    req.connection.remoteAddress ||
+                    req.socket.remoteAddress ||
+                    req.connection.socket?.remoteAddress;
+  
   req.userId = userId;
+  req.ipAddress = ipAddress;
   next();
 };
 ```
@@ -126,21 +145,35 @@ const db = admin.firestore();
 
 module.exports = async (req, res, next) => {
   const userId = req.userId;
+  const ipAddress = req.ipAddress;
   const today = new Date().toISOString().split('T')[0];
-  const limitDoc = db.collection('rate_limits').doc(`${userId}_${today}`);
   
   try {
-    const doc = await limitDoc.get();
-    const count = doc.exists ? doc.data().count : 0;
+    // Check user ID rate limit
+    const userLimitDoc = db.collection('rate_limits').doc(`${userId}_${today}`);
+    const userLimitSnapshot = await userLimitDoc.get();
+    const userCount = userLimitSnapshot.exists ? userLimitSnapshot.data().count : 0;
     
-    if (count >= 2) {
+    if (userCount >= 2) {
       return res.status(429).json({
         error: 'Rate limit exceeded',
-        message: 'Maximum 2 calculations per day allowed'
+        message: 'Maximum 2 calculations per day allowed (user)'
       });
     }
     
-    req.remainingCalculations = 2 - count;
+    // Check IP address rate limit
+    const ipLimitDoc = db.collection('ip_rate_limits').doc(`${ipAddress}_${today}`);
+    const ipLimitSnapshot = await ipLimitDoc.get();
+    const ipCount = ipLimitSnapshot.exists ? ipLimitSnapshot.data().count : 0;
+    
+    if (ipCount >= 2) {
+      return res.status(429).json({
+        error: 'Rate limit exceeded',
+        message: 'Maximum 2 calculations per day allowed (IP address)'
+      });
+    }
+    
+    req.remainingCalculations = 2 - userCount;
     next();
   } catch (error) {
     res.status(500).json({ error: 'Rate limit check failed' });
@@ -154,12 +187,13 @@ const admin = require('firebase-admin');
 const db = admin.firestore();
 
 class IMCService {
-  async calculateAndStore(userId, peso, altura) {
+  async calculateAndStore(userId, ipAddress, peso, altura) {
     const imc = peso / (altura * altura);
     const categoria = this.getCategory(imc);
     
     const result = {
       userId,
+      ipAddress,
       peso,
       altura,
       imc: parseFloat(imc.toFixed(1)),
@@ -171,10 +205,21 @@ class IMCService {
     // Store result
     const docRef = await db.collection('imc_results').add(result);
     
-    // Update rate limit
-    const today = new Date().toISOString().split('T')[0);
-    const limitDoc = db.collection('rate_limits').doc(`${userId}_${today}`);
-    await limitDoc.set({
+    // Update user rate limit
+    const today = new Date().toISOString().split('T')[0];
+    const userLimitDoc = db.collection('rate_limits').doc(`${userId}_${today}`);
+    await userLimitDoc.set({
+      userId,
+      date: today,
+      count: admin.firestore.FieldValue.increment(1),
+      expiresAt: new Date(new Date().setDate(new Date().getDate() + 1))
+    }, { merge: true });
+    
+    // Update IP rate limit
+    const ipLimitDoc = db.collection('ip_rate_limits').doc(`${ipAddress}_${today}`);
+    await ipLimitDoc.set({
+      ipAddress,
+      date: today,
       count: admin.firestore.FieldValue.increment(1),
       expiresAt: new Date(new Date().setDate(new Date().getDate() + 1))
     }, { merge: true });
@@ -219,13 +264,14 @@ exports.calculate = async (req, res) => {
   try {
     const { peso, altura } = req.body;
     const userId = req.userId;
+    const ipAddress = req.ipAddress;
     
     // Validation
     if (!peso || !altura || peso <= 0 || altura <= 0) {
       return res.status(400).json({ error: 'Invalid input' });
     }
     
-    const result = await IMCService.calculateAndStore(userId, peso, altura);
+    const result = await IMCService.calculateAndStore(userId, ipAddress, peso, altura);
     
     res.json({
       success: true,
@@ -660,7 +706,16 @@ FIREBASE_CLIENT_EMAIL=your-email
 ```json
 {
   "error": "Rate limit exceeded",
-  "message": "Maximum 2 calculations per day allowed"
+  "message": "Maximum 2 calculations per day allowed (user)"
+}
+```
+
+or
+
+```json
+{
+  "error": "Rate limit exceeded",
+  "message": "Maximum 2 calculations per day allowed (IP address)"
 }
 ```
 
@@ -693,12 +748,16 @@ FIREBASE_CLIENT_EMAIL=your-email
 - [ ] IMC calculation works client-side
 - [ ] Results sent to backend with rate limit check
 - [ ] Results stored in Firestore
-- [ ] Rate limit enforced (2 per day)
+- [ ] User ID rate limit enforced (2 per day)
+- [ ] IP address rate limit enforced (2 per day)
+- [ ] Rate limit error messages differentiate between user and IP limits
 - [ ] User identifier anonymized (first 8 chars)
+- [ ] IP address extracted correctly from request headers
 - [ ] Results table updates after calculation
 - [ ] Auto-refresh works every 2 minutes
 - [ ] Multiple users see each other's results
 - [ ] Timestamps format correctly
+- [ ] Rate limits reset at midnight (UTC)
 
 ---
 
